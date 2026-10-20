@@ -1,0 +1,19 @@
+{
+  "name": "gad_platform",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.3.0",
+    "sql.js": "^1.15.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
