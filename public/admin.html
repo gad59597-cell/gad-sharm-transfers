@@ -1,0 +1,27 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Gad Sharm Transfers</title><link rel="stylesheet" href="/style.css"></head><body>
+<header class="top"><div class="logo"><b>GST</b> Admin</div><input id="pw" type="password" placeholder="Admin password" style="width:220px"></header>
+<div class="wrap" style="padding-top:16px" id="app"><p class="muted">Enter the admin password.</p></div>
+<script>const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+$('pw').value=sessionStorage.apw||'';$('pw').onchange=()=>{sessionStorage.apw=$('pw').value;load()};
+const H=()=>({'x-admin':sessionStorage.apw||'','content-type':'application/json'});const post=(u,b)=>fetch(u,{method:'POST',headers:H(),body:JSON.stringify(b)}).then(load);
+async function link(id){const j=await (await fetch('/api/admin/driver/'+id+'/link',{headers:H()})).json();prompt('Driver panel link (send privately):',location.origin+j.link)}
+async function load(){const r=await fetch('/api/admin/all',{headers:H()});if(!r.ok){$('app').innerHTML='<p class="err">Wrong password</p>';return}const d=await r.json();
+ const today=new Date().toISOString().slice(0,10);const up=d.bookings.filter(b=>b.date>=today&&!['completed','cancelled'].includes(b.status));
+ $('app').innerHTML=`
+ <div class="card"><h3>Upcoming / scheduled rides (${up.length})</h3><table><tr><th>Trip code</th><th>When</th><th>Customer</th><th>Route</th><th>€</th><th>Status</th><th>Driver</th><th></th></tr>
+ ${up.map(b=>`<tr><td><b>${b.ref}</b></td><td>${b.date} ${b.time}</td><td>${esc(b.name)}<br>${esc(b.phone)}</td><td>${esc(b.pickup)} → ${esc(b.dropoff)}</td><td>${b.price+b.night}${b.wallet_used?'<br><small>wallet '+b.wallet_used+'</small>':''}</td><td><span class="badge">${b.status}</span></td><td>${esc(b.driver||(b.offered_to?'offered: '+b.offered_to:'—'))}</td>
+ <td><button class="btn sm ghost" onclick="post('/api/admin/booking/${b.ref}/reassign',{})">Reassign</button></td></tr>`).join('')}</table></div>
+ <div class="grid" style="margin-top:16px"><div class="card"><h3>Drivers & cars (priority 1 = Gad, always offered first)</h3><table><tr><th>#</th><th>Driver</th><th>Car</th><th>Plate</th><th>Active</th><th></th></tr>
+ ${d.drivers.map(x=>`<tr><td>${x.priority}</td><td>${esc(x.name)}<br>${esc(x.phone)}</td><td>${esc(x.color)} ${esc(x.model)}</td><td><input value="${esc(x.plate)}" onchange="post('/api/admin/driver/${x.id}',{plate:this.value})" style="width:110px"></td>
+ <td><input type="checkbox" style="width:auto" ${x.active?'checked':''} onchange="post('/api/admin/driver/${x.id}',{active:this.checked})"></td><td><button class="btn sm ghost" onclick="link(${x.id})">Panel link</button></td></tr>`).join('')}</table>
+ <h4>Add driver + car</h4><div class="row"><input id="dn" placeholder="Name"><input id="dp" placeholder="Phone +20…"></div><div class="row3" style="margin-top:6px"><input id="dm" placeholder="Car model"><input id="dc" placeholder="Color"><input id="dl" placeholder="Plate"></div>
+ <div class="row" style="margin-top:6px"><input id="dpr" type="number" placeholder="Priority (2+)" value="${d.drivers.length+1}"><button class="btn" onclick="post('/api/admin/driver',{name:dn.value,phone:dp.value,model:dm.value,color:dc.value,plate:dl.value,priority:dpr.value})">Add</button></div></div>
+ <div class="card"><h3>Settings</h3><label>Offer timeout before auto-reassign (min)</label><input id="s1" value="${d.settings.offer_timeout_min}"><label>City ride rate €/km (zone↔zone inside Sharm)</label><input id="s2" value="${d.settings.city_per_km_eur}">
+ <label>City ride minimum €</label><input id="s3" value="${d.settings.city_min_eur}"><label>EUR→EGP</label><input id="s4" value="${d.settings.eur_egp}">
+ <button class="btn" style="margin-top:8px" onclick="post('/api/admin/settings',{offer_timeout_min:s1.value,city_per_km_eur:s2.value,city_min_eur:s3.value,eur_egp:s4.value})">Save</button>
+ <h3>Fixed prices</h3>${d.routes.map(x=>`<div class="price"><span>${esc(x.name)}</span><span><input value="${x.eur}" style="width:70px" onchange="post('/api/admin/route/${x.id}',{eur:this.value,egp:${x.egp}})"> €</span></div>`).join('')}</div></div>
+ <div class="grid" style="margin-top:16px"><div class="card"><h3>Customer wallets</h3><table><tr><th>Customer</th><th>Balance</th><th>Cash top-up</th></tr>${d.customers.map(c=>`<tr><td>${esc(c.name)}<br>${esc(c.phone)}</td><td>€${c.balance}</td><td><input id="w${c.id}" type="number" style="width:80px"> <button class="btn sm" onclick="post('/api/admin/wallet/${c.id}',{amount:w${c.id}.value})">Credit</button></td></tr>`).join('')||'<tr><td class="muted">No accounts yet</td></tr>'}</table></div>
+ <div class="card"><h3>Reviews (${d.reviews.length})</h3>${d.reviews.map(r=>`<p>${'★'.repeat(r.rating)} ${esc(r.text)}</p>`).join('')||'<p class="muted">None yet</p>'}</div></div>
+ <div class="card" style="margin-top:16px"><h3>All bookings (${d.bookings.length})</h3><table>${d.bookings.map(b=>`<tr><td>${b.ref}</td><td>${b.date} ${b.time}</td><td>${esc(b.name)}</td><td>${b.status}</td><td>${esc(b.driver||'')}</td></tr>`).join('')}</table></div>`}
+if(sessionStorage.apw)load();setInterval(()=>sessionStorage.apw&&load(),20000);
+</script></body></html>

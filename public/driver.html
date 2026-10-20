@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Driver panel</title><link rel="stylesheet" href="/style.css"></head><body>
+<header class="top"><div class="logo"><b>GST</b> Driver</div><span id="who"></span></header>
+<div class="wrap" style="padding-top:16px"><div class="card"><b>📡 GPS:</b> <span id="gps">starting…</span></div>
+<div class="card" style="margin-top:12px"><h3>New offers</h3><div id="off"></div></div>
+<div class="card" style="margin-top:12px"><h3>My upcoming / scheduled rides</h3><div id="rides"></div></div></div>
+<script>const $=id=>document.getElementById(id);const T=location.hash.slice(1)||localStorage.dtok;localStorage.dtok=T;const H={'x-driver':T,'content-type':'application/json'};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function act(ref,a,body={}){const r=await fetch(`/api/driver/${ref}/${a}`,{method:'POST',headers:H,body:JSON.stringify(body)});if(!r.ok)alert((await r.json().catch(()=>({}))).error||'Error');load()}
+async function load(){const r=await fetch('/api/driver/me',{headers:H});if(!r.ok){$('who').textContent='Invalid driver link';return}const j=await r.json();$('who').textContent=j.driver.name;
+ $('off').innerHTML=j.offers.map(o=>{const left=Math.max(0,Math.round((o.offer_at+j.timeout*60000-Date.now())/1000));return `<div class="price"><span><b>${o.ref}</b> · ${o.date} ${o.time}<br>${esc(o.pickup)} → ${esc(o.dropoff)}<br>${o.pax} pax · ${o.bags} bags ${esc(o.flight)} · <b>€${o.total}</b><br><small>auto-reassign in ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}</small></span>
+ <span><button class="btn green sm" onclick="act('${o.ref}','accept')">Accept</button> <button class="btn red sm" onclick="act('${o.ref}','decline')">Decline</button></span></div>`}).join('')||'<p class="muted">No offers</p>';
+ $('rides').innerHTML=j.rides.map(o=>`<div class="price"><span><b>${o.ref}</b> · ${o.date} ${o.time} · <span class="badge">${o.status}</span><br>${esc(o.name)} <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a><br>${esc(o.pickup)} → ${esc(o.dropoff)} ${esc(o.flight)}<br>${esc(o.notes)} · cash due <b>€${o.due}</b></span><span>
+ ${o.status==='accepted'?`<input id="p${o.ref}" placeholder="PIN" style="width:90px" inputmode="numeric"> <button class="btn sm" onclick="act('${o.ref}','pin',{pin:$('p${o.ref}').value})">Check PIN</button> <button class="btn red sm" onclick="act('${o.ref}','problem',{reason:prompt('Problem?')||''})">Problem</button>`:''}
+ ${o.status==='picked_up'?`<button class="btn green sm" onclick="act('${o.ref}','complete')">Complete trip</button>`:''}</span></div>`).join('')||'<p class="muted">No rides</p>'}
+load();setInterval(load,10000);
+function send(p){fetch('/api/driver/location',{method:'POST',headers:H,body:JSON.stringify({lat:p.coords.latitude,lng:p.coords.longitude})});$('gps').textContent=`sent ${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)} at ${new Date().toLocaleTimeString()}`}
+function tick(){navigator.geolocation.getCurrentPosition(send,e=>$('gps').textContent='GPS error: '+e.message,{enableHighAccuracy:true})}
+if(navigator.geolocation){tick();setInterval(tick,10000)}
+</script></body></html>

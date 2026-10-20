@@ -1,0 +1,16 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wallet — Gad Sharm Transfers</title><link rel="stylesheet" href="/style.css"></head><body>
+<header class="top"><a class="logo" href="/" style="text-decoration:none;color:inherit"><b>GST</b> Gad Sharm Transfers</a><select id="lang" style="width:auto"></select></header>
+<div class="wrap" style="padding-top:16px;max-width:640px"><div class="card" id="auth"><h2 data-t="wallet"></h2><input id="n" data-tp="name"><input id="ph" data-tp="phone" style="margin-top:8px"><input id="pw" type="password" data-tp="password" style="margin-top:8px">
+<div class="row" style="margin-top:8px"><button class="btn" id="li" data-t="login"></button><button class="btn ghost" id="rg" data-t="register"></button></div><p class="err" id="e"></p></div>
+<div class="card" id="w" hidden><div class="muted" data-t="balance"></div><div class="code" id="bal"></div>
+<div class="row" style="margin-top:10px"><input id="amt" type="number" placeholder="€"><button class="btn" id="tu" data-t="topup"></button></div><p class="muted" id="tm"></p>
+<h3 data-t="history"></h3><div id="tx"></div><h3>Bookings</h3><div id="bk"></div><button class="btn ghost sm" onclick="localStorage.removeItem('ctok');location.reload()">Log out</button></div></div>
+<script src="/i18n.js"></script><script>const $=id=>document.getElementById(id);langSelect($('lang'));applyI18n();const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function auth(u){const r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:$('n').value,phone:$('ph').value,password:$('pw').value})});const j=await r.json();if(!r.ok){$('e').textContent=j.error;return}localStorage.ctok=j.token;load()}
+$('li').onclick=()=>auth('/api/login');$('rg').onclick=()=>auth('/api/register');
+async function load(){if(!localStorage.ctok)return;const r=await fetch('/api/wallet',{headers:{'x-customer':localStorage.ctok}});if(!r.ok)return;const j=await r.json();$('auth').hidden=true;$('w').hidden=false;
+ $('bal').textContent='€'+j.balance;$('tm').textContent=j.onlinePayment?'':'Online top-up is not active yet — top up in cash with Gad; it is credited by the office.';
+ $('tx').innerHTML=j.tx.map(x=>`<div class="price"><span>${new Date(x.at).toLocaleString()} · ${esc(x.note)} ${x.booking_ref||''}</span><b>${x.amount>0?'+':''}€${x.amount}</b></div>`).join('')||'<p class="muted">—</p>';
+ $('bk').innerHTML=j.bookings.map(b=>`<p><a href="/booking.html?ref=${b.ref}&k=${b.token}">${b.ref}</a> · ${b.date} ${b.time} · ${b.status}</p>`).join('')||'<p class="muted">—</p>'}
+$('tu').onclick=async()=>{const r=await fetch('/api/wallet/topup',{method:'POST',headers:{'content-type':'application/json','x-customer':localStorage.ctok},body:JSON.stringify({amount:$('amt').value})});const j=await r.json();j.url?location.href=j.url:$('tm').textContent=j.error};
+load();</script></body></html>
