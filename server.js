@@ -35,7 +35,7 @@ async function init(){
   create table if not exists reviews(id integer primary key,booking_id integer unique,rating integer,text text,name text,at integer);`);
   if(!get('select 1 x from settings')){
     [['offer_timeout_min','10'],['city_per_km_eur','0.60'],['city_min_eur','7'],['eur_egp','60']].forEach(s=>db.run('insert into settings values(?,?)',s));
-    db.run('insert into drivers(name,phone,priority,token) values(?,?,?,?)',['Gad','+201097844728',1,process.env.GAD_DRIVER_TOKEN]);
+    db.run('insert into drivers(name,phone,priority,token) values(?,?,?,?)',['Gad','+201097844728',1,process.env.GAD_DRIVER_TOKEN||require('crypto').randomBytes(16).toString('hex')]);
     db.run('insert into cars(driver_id,model,color,plate,seats,bags,photo) values(1,?,?,?,3,3,?)',['Mitsubishi Lancer 2014 (A/C)','Red','',"/img/p5.jpg"]);
     [['naama','Airport ↔ Naama Bay / Montazah',13,780,0],['nabq','Airport ↔ Nabq Bay',13,780,0],['hadaba','Airport ↔ Hadaba / Ras Um Sid',13,780,0],['sharks','Airport ↔ Sharks Bay / SOHO / Ras Nasrani',11,660,0],
      ['oldmarket','Airport ↔ Old Market',14,840,0],['rasmo','Ras Mohammed day trip (driver waits, park fee not incl.)',30,1800,1],['hourly','Hourly inside Sharm (per hour, min 2 h)',8,480,0]]
