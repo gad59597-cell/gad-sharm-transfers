@@ -1,19 +1,42 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Driver panel</title><link rel="stylesheet" href="/style.css"></head><body>
-<header class="top"><div class="logo"><b>GST</b> Driver</div><span id="who"></span></header>
-<div class="wrap" style="padding-top:16px"><div class="card"><b>📡 GPS:</b> <span id="gps">starting…</span></div>
-<div class="card" style="margin-top:12px"><h3>New offers</h3><div id="off"></div></div>
-<div class="card" style="margin-top:12px"><h3>My upcoming / scheduled rides</h3><div id="rides"></div></div></div>
-<script>const $=id=>document.getElementById(id);const T=location.hash.slice(1)||localStorage.dtok;localStorage.dtok=T;const H={'x-driver':T,'content-type':'application/json'};
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Driver panel — Gad Sharm Transfers</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/style.css">
+<style>.bigb{display:block;width:100%;font-size:18px;padding:16px;margin-top:10px;border-radius:14px}.ride{border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-top:12px;background:#fff}
+.ride h4{margin:0 0 6px;font-size:18px}.ride .r{margin:4px 0;font-size:15px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pinin{font-size:24px;text-align:center;letter-spacing:6px;padding:12px;margin-top:10px}
+#gpsb.on{background:var(--ok)}#gpsb{background:#475569}.gpsst{font-size:13px;color:var(--mut);margin-top:6px}</style></head><body>
+<header class="top"><div class="logo"><b>GST</b> <span id="who">Driver</span></div><button class="btn ghost sm" id="out">Log out</button></header>
+<div class="wrap" style="padding-top:14px;max-width:640px">
+<div class="card"><button class="btn bigb" id="gpsb">📡 Share live location: OFF</button><div class="gpsst" id="gps">Customers see your car on their booking page while this is ON.</div></div>
+<div class="card" style="margin-top:12px"><h3>🔔 New offers</h3><div id="off"></div></div>
+<div class="card" style="margin-top:12px"><h3>📅 My rides</h3><div id="rides"></div></div></div>
+<script>const $=id=>document.getElementById(id);if(location.hash.length>1){localStorage.dtok=location.hash.slice(1);history.replaceState(null,'','/driver.html')}
+const T=localStorage.dtok;if(!T)location.replace('/driver-login.html');const H={'x-driver':T,'content-type':'application/json'};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function act(ref,a,body={}){const r=await fetch(`/api/driver/${ref}/${a}`,{method:'POST',headers:H,body:JSON.stringify(body)});if(!r.ok)alert((await r.json().catch(()=>({}))).error||'Error');load()}
-async function load(){const r=await fetch('/api/driver/me',{headers:H});if(!r.ok){$('who').textContent='Invalid driver link';return}const j=await r.json();$('who').textContent=j.driver.name;
- $('off').innerHTML=j.offers.map(o=>{const left=Math.max(0,Math.round((o.offer_at+j.timeout*60000-Date.now())/1000));return `<div class="price"><span><b>${o.ref}</b> · ${o.date} ${o.time}<br>${esc(o.pickup)} → ${esc(o.dropoff)}<br>${o.pax} pax · ${o.bags} bags ${esc(o.flight)} · <b>€${o.total}</b><br><small>auto-reassign in ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}</small></span>
- <span><button class="btn green sm" onclick="act('${o.ref}','accept')">Accept</button> <button class="btn red sm" onclick="act('${o.ref}','decline')">Decline</button></span></div>`}).join('')||'<p class="muted">No offers</p>';
- $('rides').innerHTML=j.rides.map(o=>`<div class="price"><span><b>${o.ref}</b> · ${o.date} ${o.time} · <span class="badge">${o.status}</span><br>${esc(o.name)} <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a><br>${esc(o.pickup)} → ${esc(o.dropoff)} ${esc(o.flight)}<br>${esc(o.notes)} · cash due <b>€${o.due}</b></span><span>
- ${o.status==='accepted'?`<input id="p${o.ref}" placeholder="PIN" style="width:90px" inputmode="numeric"> <button class="btn sm" onclick="act('${o.ref}','pin',{pin:$('p${o.ref}').value})">Check PIN</button> <button class="btn red sm" onclick="act('${o.ref}','problem',{reason:prompt('Problem?')||''})">Problem</button>`:''}
- ${o.status==='picked_up'?`<button class="btn green sm" onclick="act('${o.ref}','complete')">Complete trip</button>`:''}</span></div>`).join('')||'<p class="muted">No rides</p>'}
+$('out').onclick=()=>{localStorage.removeItem('dtok');localStorage.removeItem('dgps');location.replace('/driver-login.html')};
+async function act(ref,a,body={}){const r=await fetch(`/api/driver/${ref}/${a}`,{method:'POST',headers:H,body:JSON.stringify(body)});if(!r.ok)alert((await r.json().catch(()=>({}))).error||'Error');
+ if(r.ok&&a==='accept'&&!gpsOn)toggleGps(true);load()}
+const maps=(q)=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+async function load(){const r=await fetch('/api/driver/me',{headers:H});if(r.status===401){localStorage.removeItem('dtok');location.replace('/driver-login.html');return}if(!r.ok)return;const j=await r.json();$('who').textContent=j.driver.name;
+ $('off').innerHTML=j.offers.map(o=>{const left=Math.max(0,Math.round((o.offer_at+j.timeout*60000-Date.now())/1000));return `<div class="ride"><h4>${o.ref} · €${o.total}</h4>
+ <div class="r">🕒 <b>${o.date} ${o.time}</b></div><div class="r">🟢 ${esc(o.pickup)}</div><div class="r">🏁 ${esc(o.dropoff)||'—'}</div><div class="r">👤 ${o.pax} · 🧳 ${o.bags} ${o.vehicle?'· 🚘 '+esc(o.vehicle):''} ${o.flight?'· ✈ '+esc(o.flight):''}</div>
+ <div class="muted">Auto-reassign in ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}</div>
+ <div class="two"><button class="btn green bigb" onclick="act('${o.ref}','accept')">✔ Accept</button><button class="btn red bigb" onclick="act('${o.ref}','decline')">✖ Decline</button></div></div>`}).join('')||'<p class="muted">No offers right now.</p>';
+ const typing=document.activeElement&&document.activeElement.classList.contains('pinin')?document.activeElement.id:null,kept=typing&&$(typing).value;
+ $('rides').innerHTML=j.rides.map(o=>`<div class="ride"><h4>${o.ref} <span class="badge">${o.status.replace('_',' ')}</span></h4>
+ <div class="r">🕒 <b>${o.date} ${o.time}</b></div><div class="r">👤 ${esc(o.name)} · ${o.pax} pax · ${o.bags} bags ${o.flight?'· ✈ '+esc(o.flight):''}</div>
+ <div class="r">🟢 <a href="${maps(o.pickup)}" target="_blank">${esc(o.pickup)}</a></div><div class="r">🏁 ${o.dropoff?`<a href="${maps(o.dropoff)}" target="_blank">${esc(o.dropoff)}</a>`:'—'}</div>
+ ${o.notes?`<div class="r">📝 ${esc(o.notes)}</div>`:''}<div class="r">💵 Cash due: <b>€${o.due}</b></div>
+ <div class="two"><a class="btn sm green bigb" href="tel:${esc(o.phone)}">📞 Call</a><a class="btn sm wa bigb" href="https://wa.me/${esc(o.phone).replace(/\D/g,'')}">WhatsApp</a></div>
+ ${o.status==='accepted'?`<input class="pinin" id="p${o.ref}" placeholder="Customer PIN" inputmode="numeric" maxlength="4"><button class="btn bigb" onclick="act('${o.ref}','pin',{pin:$('p${o.ref}').value})">▶ Start trip (check PIN)</button>
+  <button class="btn ghost bigb" onclick="act('${o.ref}','problem',{reason:prompt('Problem?')||''})">⚠ Problem / can't do it</button>`:''}
+ ${o.status==='picked_up'?`<button class="btn green bigb" onclick="act('${o.ref}','complete')">🏁 Complete trip</button>`:''}</div>`).join('')||'<p class="muted">No rides.</p>';
+ if(typing&&$(typing)){$(typing).value=kept;$(typing).focus()}}
 load();setInterval(load,10000);
-function send(p){fetch('/api/driver/location',{method:'POST',headers:H,body:JSON.stringify({lat:p.coords.latitude,lng:p.coords.longitude})});$('gps').textContent=`sent ${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)} at ${new Date().toLocaleTimeString()}`}
-function tick(){navigator.geolocation.getCurrentPosition(send,e=>$('gps').textContent='GPS error: '+e.message,{enableHighAccuracy:true})}
-if(navigator.geolocation){tick();setInterval(tick,10000)}
+let gpsOn=false,wid=null,last=0,lastP=null;
+function send(p,force){lastP=p;if(!force&&Date.now()-last<4000)return;last=Date.now();
+ fetch('/api/driver/location',{method:'POST',headers:H,body:JSON.stringify({lat:p.coords.latitude,lng:p.coords.longitude})}).then(r=>{$('gps').textContent=(r.ok?'✔ Sent ':'✖ Not sent ')+`${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)} · ${new Date().toLocaleTimeString()}`}).catch(()=>$('gps').textContent='✖ No internet')}
+function toggleGps(on){gpsOn=on;localStorage.dgps=on?'1':'';$('gpsb').classList.toggle('on',on);$('gpsb').textContent='📡 Share live location: '+(on?'ON':'OFF');
+ if(on){if(!navigator.geolocation){$('gps').textContent='GPS not available on this device';return}
+  wid=navigator.geolocation.watchPosition(p=>send(p),e=>$('gps').textContent='GPS error: '+e.message+' — allow location for this site',{enableHighAccuracy:true,maximumAge:5000,timeout:20000})}
+ else if(wid!==null){navigator.geolocation.clearWatch(wid);wid=null}}
+setInterval(()=>gpsOn&&lastP&&send(lastP,true),15000);
+$('gpsb').onclick=()=>toggleGps(!gpsOn);if(localStorage.dgps)toggleGps(true);
 </script></body></html>

@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My booking — Gad Sharm Transfers</title><link rel="stylesheet" href="/style.css"></head><body>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My booking — Gad Sharm Transfers</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/style.css"></head><body>
 <header class="top"><a class="logo" href="/" style="text-decoration:none;color:inherit"><b>GST</b> Gad Sharm Transfers</a><select id="lang" style="width:auto"></select></header>
 <div class="wrap" style="padding-top:18px"><div class="grid">
 <div class="card"><div class="muted" data-t="tripcode"></div><div class="code" id="ref"></div><span class="badge" id="st"></span>
@@ -17,12 +17,12 @@ langSelect($('lang'));applyI18n();if(Q.get('new')&&sessionStorage.wa){$('wa').hi
 let M,mk;async function load(){const r=await fetch(`/api/booking/${ref}?k=${k}`);if(!r.ok){$('ref').textContent='Not found';return}const b=await r.json();
  $('ref').textContent=b.ref;$('st').textContent=t('st_'+b.status);$('pinb').hidden=!b.pin;$('pin').textContent=b.pin||'';
  const d=b.driver;$('drv').innerHTML=`<p><b>${esc(d.name)}</b>${d.pending?' <span class="muted">('+t('st_offered')+')</span>':''}<br>${d.car?`${esc(d.car.color)} ${esc(d.car.model)} · ${t('plate')}: <b>${esc(d.car.plate)}</b><br>`:''}<a class="btn sm green" href="tel:${esc(d.phone)}">📞 ${t('call')} ${esc(d.phone)}</a> <a class="btn sm wa" href="https://wa.me/${esc(d.phone).replace(/\D/g,'')}">WhatsApp</a></p>`;
- $('route').textContent=(b.route||'')+' · '+b.pickup+(b.dropoff?' → '+b.dropoff:'');$('when').textContent=b.date+' '+b.time;$('pr').textContent='€'+b.price+(b.night?' + €'+b.night:'');
+ $('route').textContent=(b.route||'')+(b.vehicle?' · '+t('veh_'+b.vehicle):'')+' · '+b.pickup+(b.dropoff?' → '+b.dropoff:'');$('when').textContent=b.date+' '+b.time;$('pr').textContent='€'+b.price+(b.night?' + €'+b.night:'');
  $('tot').textContent='€'+(b.price+b.night)+(b.wallet_used?` (wallet −€${b.wallet_used}, cash €${b.due})`:'');
  $('ev').innerHTML=b.events.map(e=>`<p class="muted">${new Date(e.at).toLocaleString()} — ${esc(e.msg)}</p>`).join('');
  $('revc').hidden=!(b.status==='completed'&&!b.review);
  if(!M){M=await makeMap($('map'),27.93,34.36,11)}
- if(d.lat){mk?mk.move(d.lat,d.lng):(mk=M.marker(d.lat,d.lng,'🚗 '+d.name),M.center(d.lat,d.lng,14));$('locat').textContent='🚗 '+new Date(d.loc_at).toLocaleTimeString()}else $('locat').textContent='—'}
+ if(d.lat){mk?(mk.move(d.lat,d.lng),M.center(d.lat,d.lng)):(mk=M.marker(d.lat,d.lng,'🚗 '+d.name,'#0b5cff'),M.center(d.lat,d.lng,14));$('locat').textContent='🚗 '+new Date(d.loc_at).toLocaleTimeString()}else $('locat').textContent='—'}
 load();setInterval(load,5000);
 $('np').onclick=async()=>{await fetch(`/api/booking/${ref}/pin`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({k})});load()};
 $('rs').onclick=async()=>{const r=await fetch(`/api/booking/${ref}/review`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({k,rating:$('rt').value,text:$('rx').value})});$('rm').textContent=r.ok?'✔':(await r.json()).error;load()};

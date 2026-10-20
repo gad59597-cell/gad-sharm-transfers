@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Driver login — Gad Sharm Transfers</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/style.css">
+<style>.dl{max-width:420px;margin:30px auto}.dl input{font-size:18px;padding:14px}.big{width:100%;font-size:18px;padding:16px;margin-top:14px}</style></head><body>
+<header class="top"><a class="logo" href="/" style="text-decoration:none;color:inherit"><b>GST</b> Driver</a><select id="lang" style="width:auto"></select></header>
+<div class="wrap"><form class="card dl" id="f"><h2>🚗 <span data-t="driverLogin"></span></h2>
+<label data-t="phone"></label><input id="ph" type="tel" inputmode="tel" autocomplete="username" placeholder="+20 1xx xxx xxxx" required>
+<label>PIN / <span data-t="password"></span></label><input id="pn" type="password" autocomplete="current-password" required>
+<p class="err" id="err"></p><button class="btn big" data-t="login"></button>
+<p class="muted">PIN is set by the office (admin panel).</p></form></div>
+<script src="/i18n.js"></script><script>const $=id=>document.getElementById(id);langSelect($('lang'));applyI18n();
+if(localStorage.dtok)fetch('/api/driver/me',{headers:{'x-driver':localStorage.dtok}}).then(r=>r.ok&&location.replace('/driver.html'));
+$('f').onsubmit=async e=>{e.preventDefault();$('err').textContent='';const r=await fetch('/api/driver/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({phone:$('ph').value,pin:$('pn').value})});
+ const j=await r.json().catch(()=>({}));if(!r.ok){$('err').textContent=j.error||'Error';return}localStorage.dtok=j.token;location.replace('/driver.html')};
+</script></body></html>

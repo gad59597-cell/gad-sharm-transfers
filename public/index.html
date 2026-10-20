@@ -1,22 +1,23 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gad Sharm Transfers — Sharm El Sheikh transfers & taxi</title>
 <meta name="description" content="Sharm El Sheikh transfers & taxi: private airport transfers from SSH to Naama Bay, Nabq, Hadaba, Sharks Bay, SOHO and Old Market. Licensed driver, fixed prices, 24/7.">
-<link rel="stylesheet" href="/style.css"></head><body>
+<link rel="icon" href="data:,"><link rel="stylesheet" href="/style.css"></head><body>
 <header class="top"><div class="logo"><b>GST</b> Gad Sharm Transfers</div><div class="nav"><a class="btn ghost sm" href="/wallet.html" data-t="wallet"></a><select id="lang" style="width:auto"></select></div></header>
 <div class="hero"><div class="wrap"><span class="pill" data-t="tag"></span><h1 data-t="hero"></h1><p data-t="sub"></p>
 <div class="why"><span>✔ <b data-t="why1"></b></span><span>💶 <b data-t="why2"></b></span><span>📍 <b data-t="why3"></b></span><span>🕒 <b data-t="why4"></b></span></div></div></div>
 <div class="wrap"><div class="grid lift">
 <form class="card" id="f" autocomplete="off"><h2 data-t="book"></h2>
- <div class="seg" id="svc"><button type="button" data-s="transfer" class="on" data-t="transfer"></button><button type="button" data-s="hourly" data-t="hourly"></button><button type="button" data-s="rasmo" data-t="rasmo"></button></div>
- <label data-t="from"></label><div class="ac"><input id="pickup" data-tp="search" required><ul id="pickupL" hidden></ul></div>
+ <div class="seg" id="svc"><button type="button" data-s="transfer" class="on" data-t="transfer"></button><button type="button" data-s="hourly" data-t="hourly"></button></div>
+ <label data-t="from"></label><div class="ac"><input id="pickup" data-tp="search" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" required><ul id="pickupL" hidden></ul></div>
  <div class="mini"><button type="button" id="myloc">📍 <span data-t="myloc"></span></button><button type="button" data-pin="pickup">🗺 <span data-t="pin"></span></button></div>
- <div id="toBox"><label data-t="to"></label><div class="ac"><input id="dropoff" data-tp="search"><ul id="dropoffL" hidden></ul></div>
+ <div id="toBox"><label data-t="to"></label><div class="ac"><input id="dropoff" data-tp="search" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><ul id="dropoffL" hidden></ul></div>
  <div class="mini"><button type="button" data-pin="dropoff">🗺 <span data-t="pin"></span></button></div></div>
  <div id="hoursBox" hidden><label data-t="hours"></label><input id="hours" type="number" min="2" value="2"></div>
- <div id="pinMap" class="map" style="height:240px;margin-top:8px" hidden></div>
+ <div id="pinMap" class="map" style="height:260px;margin-top:10px"></div><p class="mapnote">👆 <span data-t="mapHint"></span>: <b id="pinFor"></b></p>
+ <label data-t="vehicle"></label><div class="vsel" id="vsel"></div>
  <div class="row"><div><label data-t="date"></label><input type="date" id="date" required></div><div><label data-t="time"></label><input type="time" id="time" required></div></div>
  <p class="muted" data-t="scheduled"></p>
- <div class="row3"><div><label data-t="pax"></label><select id="pax"><option>1</option><option selected>2</option><option>3</option></select></div><div><label data-t="bags"></label><select id="bags"><option>0</option><option>1</option><option selected>2</option><option>3</option></select></div><div><label data-t="flight"></label><input id="flight" placeholder="SM123"></div></div>
+ <div class="row3"><div><label data-t="pax"></label><select id="pax"></select></div><div><label data-t="bags"></label><select id="bags"></select></div><div><label data-t="flight"></label><input id="flight" placeholder="SM123"></div></div>
  <div class="row"><div><label data-t="name"></label><input id="name" required></div><div><label data-t="phone"></label><input id="phone" required placeholder="+44…"></div></div>
  <label data-t="email"></label><input id="email" type="email"><label data-t="notes"></label><textarea id="notes" rows="2"></textarea>
  <label id="wl" hidden><input type="checkbox" id="usew" style="width:auto"> <span data-t="useWallet"></span> (<span id="wbal"></span>)</label>
@@ -26,11 +27,10 @@
  <p class="err" id="err"></p><button class="btn" style="width:100%" data-t="confirm"></button>
 </form>
 <div><div class="card"><h2 data-t="prices"></h2><p class="muted" data-t="perCar"></p><div id="plist"></div><p class="muted" data-t="area"></p></div>
-<div class="card" style="margin-top:16px"><h2 data-t="fleet"></h2><div class="gal"><img src="/img/p5.jpg" alt="Mitsubishi Lancer"><img src="/img/p6.jpg" alt=""><img src="/img/p7.jpg" alt=""></div>
-<p><b>Mitsubishi Lancer · A/C</b><br><span class="muted">3 pax · 3 bags · Driver: Gad (licensed tourism limousine driver, 10+ years experience)</span></p></div></div>
+<div class="card" style="margin-top:16px"><h2 data-t="fleet"></h2><div class="vehs" id="vehs"></div><p class="muted" data-t="vehNote"></p><p class="muted">Driver: Gad — licensed tourism limousine driver, 10+ years experience.</p></div></div>
 </div>
 <section><h2 data-t="how"></h2><div class="steps"><div class="step"><i>1</i><br><span data-t="h1"></span></div><div class="step"><i>2</i><br><span data-t="h2"></span></div><div class="step"><i>3</i><br><span data-t="h3"></span></div><div class="step"><i>4</i><br><span data-t="h4"></span></div></div></section>
 <section class="card"><h2 data-t="reviews"></h2><div id="rev"></div></section></div>
-<footer>Gad Sharm Transfers · Sharm El Sheikh, South Sinai · WhatsApp <a href="https://wa.me/201097844728">+20 109 784 4728</a> · gad59597@gmail.com</footer>
+<footer>Gad Sharm Transfers · Sharm El Sheikh, South Sinai · WhatsApp <a href="https://wa.me/201097844728">+20 109 784 4728</a> · gad59597@gmail.com · <a href="/driver-login.html" data-t="driverLogin"></a></footer>
 <a class="btn wa fab" href="https://wa.me/201097844728">WhatsApp</a>
 <script src="/i18n.js"></script><script src="/map.js"></script><script src="/home.js"></script></body></html>
